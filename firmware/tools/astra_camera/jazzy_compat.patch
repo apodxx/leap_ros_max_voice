@@ -1,0 +1,113 @@
+diff -ruN -x 'astra_pro*' -x build -x __pycache__ a/astra_camera/include/astra_camera/ob_camera_node.h b/astra_camera/include/astra_camera/ob_camera_node.h
+--- a/astra_camera/include/astra_camera/ob_camera_node.h	2026-11-06 09:36:50.828896329 +0800
++++ b/astra_camera/include/astra_camera/ob_camera_node.h	2026-11-06 09:36:50.926137209 +0800
+@@ -17,7 +17,7 @@
+ #include <magic_enum.hpp>
+ 
+ #include <opencv2/opencv.hpp>
+-#include <cv_bridge/cv_bridge.h>
++#include <cv_bridge/cv_bridge.hpp>
+ #include <sensor_msgs/msg/point_cloud2.hpp>
+ #include <sensor_msgs/point_cloud2_iterator.hpp>
+ #include <tf2_ros/static_transform_broadcaster.h>
+diff -ruN -x 'astra_pro*' -x build -x __pycache__ a/astra_camera/include/astra_camera/point_cloud_proc/point_cloud_xyz.h b/astra_camera/include/astra_camera/point_cloud_proc/point_cloud_xyz.h
+--- a/astra_camera/include/astra_camera/point_cloud_proc/point_cloud_xyz.h	2026-11-06 09:36:50.828509000 +0800
++++ b/astra_camera/include/astra_camera/point_cloud_proc/point_cloud_xyz.h	2026-11-06 09:36:50.925332509 +0800
+@@ -34,7 +34,7 @@
+ #include <rclcpp/rclcpp.hpp>
+ #include <image_transport/image_transport.hpp>
+ #include <sensor_msgs/image_encodings.hpp>
+-#include <image_geometry/pinhole_camera_model.h>
++#include <image_geometry/pinhole_camera_model.hpp>
+ #include <sensor_msgs/point_cloud2_iterator.hpp>
+ #include <memory>
+ #include "depth_traits.h"
+diff -ruN -x 'astra_pro*' -x build -x __pycache__ a/astra_camera/include/astra_camera/point_cloud_proc/point_cloud_xyzrgb.h b/astra_camera/include/astra_camera/point_cloud_proc/point_cloud_xyzrgb.h
+--- a/astra_camera/include/astra_camera/point_cloud_proc/point_cloud_xyzrgb.h	2026-11-06 09:36:50.828577541 +0800
++++ b/astra_camera/include/astra_camera/point_cloud_proc/point_cloud_xyzrgb.h	2026-11-06 09:36:50.925158095 +0800
+@@ -41,9 +41,9 @@
+ #include <sensor_msgs/image_encodings.hpp>
+ #include <sensor_msgs/point_cloud2_iterator.hpp>
+ #include <sensor_msgs/msg/point_cloud2.hpp>
+-#include <image_geometry/pinhole_camera_model.h>
++#include <image_geometry/pinhole_camera_model.hpp>
+ 
+-#include <cv_bridge/cv_bridge.h>
++#include <cv_bridge/cv_bridge.hpp>
+ #include <opencv4/opencv2/imgproc/imgproc.hpp>
+ #include <memory>
+ #include <limits>
+diff -ruN -x 'astra_pro*' -x build -x __pycache__ a/astra_camera/include/astra_camera/ros_param_backend.h b/astra_camera/include/astra_camera/ros_param_backend.h
+--- a/astra_camera/include/astra_camera/ros_param_backend.h	2026-11-06 09:36:50.828173587 +0800
++++ b/astra_camera/include/astra_camera/ros_param_backend.h	2026-11-06 09:36:50.925765629 +0800
+@@ -19,7 +19,7 @@
+   explicit ParametersBackend(rclcpp::Node* node);
+   ~ParametersBackend();
+   void addOnSetParametersCallback(
+-      rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType callback);
++      rclcpp::node_interfaces::NodeParametersInterface::OnSetParametersCallbackType callback);
+ 
+  private:
+   rclcpp::Node* node_;
+diff -ruN -x 'astra_pro*' -x build -x __pycache__ a/astra_camera/src/ob_camera_node.cpp b/astra_camera/src/ob_camera_node.cpp
+--- a/astra_camera/src/ob_camera_node.cpp	2026-11-06 09:36:50.831767172 +0800
++++ b/astra_camera/src/ob_camera_node.cpp	2026-11-06 09:36:50.928774429 +0800
+@@ -12,7 +12,7 @@
+ 
+ #include "astra_camera/ob_camera_node.h"
+ #include "astra_camera/utils.h"
+-#include <cv_bridge/cv_bridge.h>
++#include <cv_bridge/cv_bridge.hpp>
+ namespace astra_camera {
+ 
+ void OBCameraNode::init() {
+diff -ruN -x 'astra_pro*' -x build -x __pycache__ a/astra_camera/src/point_cloud_proc/point_cloud_xyz.cpp b/astra_camera/src/point_cloud_proc/point_cloud_xyz.cpp
+--- a/astra_camera/src/point_cloud_proc/point_cloud_xyz.cpp	2026-11-06 09:36:50.830640477 +0800
++++ b/astra_camera/src/point_cloud_proc/point_cloud_xyz.cpp	2026-11-06 09:36:50.929644170 +0800
+@@ -34,7 +34,7 @@
+ 
+ #include <image_transport/image_transport.hpp>
+ #include <sensor_msgs/image_encodings.hpp>
+-#include <image_geometry/pinhole_camera_model.h>
++#include <image_geometry/pinhole_camera_model.hpp>
+ #include "astra_camera/point_cloud_proc/point_cloud_xyz.h"
+ 
+ namespace astra_camera {
+diff -ruN -x 'astra_pro*' -x build -x __pycache__ a/astra_camera/src/point_cloud_proc/point_cloud_xyzrgb.cpp b/astra_camera/src/point_cloud_proc/point_cloud_xyzrgb.cpp
+--- a/astra_camera/src/point_cloud_proc/point_cloud_xyzrgb.cpp	2026-11-06 09:36:50.830740809 +0800
++++ b/astra_camera/src/point_cloud_proc/point_cloud_xyzrgb.cpp	2026-11-06 09:36:50.929121509 +0800
+@@ -39,8 +39,8 @@
+ #include <sensor_msgs/image_encodings.hpp>
+ #include <sensor_msgs/point_cloud2_iterator.hpp>
+ #include <sensor_msgs/msg/point_cloud2.hpp>
+-#include <image_geometry/pinhole_camera_model.h>
+-#include <cv_bridge/cv_bridge.h>
++#include <image_geometry/pinhole_camera_model.hpp>
++#include <cv_bridge/cv_bridge.hpp>
+ #include <opencv2/imgproc/imgproc.hpp>
+ 
+ #include <memory>
+diff -ruN -x 'astra_pro*' -x build -x __pycache__ a/astra_camera/src/ros_param_backend.cpp b/astra_camera/src/ros_param_backend.cpp
+--- a/astra_camera/src/ros_param_backend.cpp	2026-11-06 09:36:50.831042389 +0800
++++ b/astra_camera/src/ros_param_backend.cpp	2026-11-06 09:36:50.937651789 +0800
+@@ -24,7 +24,7 @@
+ }
+ 
+ void ParametersBackend::addOnSetParametersCallback(
+-    rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType callback) {
++    rclcpp::node_interfaces::NodeParametersInterface::OnSetParametersCallbackType callback) {
+   ros_callback_ = node_->add_on_set_parameters_callback(callback);
+ }
+ 
+diff -ruN -x 'astra_pro*' -x build -x __pycache__ a/astra_camera/src/uvc_camera_driver.cpp b/astra_camera/src/uvc_camera_driver.cpp
+--- a/astra_camera/src/uvc_camera_driver.cpp	2026-11-06 09:36:50.831374594 +0800
++++ b/astra_camera/src/uvc_camera_driver.cpp	2026-11-06 09:36:50.936808882 +0800
+@@ -12,7 +12,7 @@
+ 
+ #include <utility>
+ #include <opencv2/opencv.hpp>
+-#include <cv_bridge/cv_bridge.h>
++#include <cv_bridge/cv_bridge.hpp>
+ #include "astra_camera/uvc_camera_driver.h"
+ #include "astra_camera/utils.h"
+ 
