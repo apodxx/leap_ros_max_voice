@@ -1,4 +1,8 @@
-﻿# leap_ros_max — 四轮麦轮移动机器人（ESP32-S3 + RK3566 + ROS 2 Jazzy + Web）
+﻿# 小创 — 四轮麦轮语音导航机器人
+
+**语音声控 · 多点导航语音播报 · 一键自动定位**
+
+ESP32-S3 + RK3566 + ROS 2 Jazzy + Web 控制台 ｜ 唤醒词「小创小创」｜ 整车成本约 ¥752.9（二手件）
 
 一套完整的四轮麦克纳姆轮移动机器人实现，包含四个部分：
 
@@ -157,7 +161,7 @@
 ## 仓库结构
 
 ```
-leap_ros_max/
+xiaochuang-bot/
 ├── firmware/                 ① ESP32-S3 固件（ESP-IDF 工程）
 │   ├── main/                 控制器/运动学/任务/配置
 │   ├── components/           驱动（AT8236、编码器、LSM6DS3、WS2812…）
