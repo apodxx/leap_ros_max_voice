@@ -53,6 +53,9 @@ def generate_launch_description():
             executable='lite_navigation_node',
             name='lite_navigation',
             output='screen',
+            # 主控的 x/y/ω 与 ROS 相反，符号翻转在 cmd_vel_shaper 里统一处理。
+            # 导航必须走 /cmd_vel_raw 才能享受同样的限幅与符号转换。
+            remappings=[('/cmd_vel', '/cmd_vel_raw')],
             parameters=[
                 params_file,
                 {'map_yaml': map_yaml, 'base_frame': base_frame},

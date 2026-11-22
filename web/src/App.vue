@@ -713,8 +713,8 @@ const keyboardState = {
 }
 let keyboardInterval = null
 
-const SPEED_SETTINGS_STORAGE_KEY = 'ros2-web-motion-speeds-v5'
-const DEFAULT_LINEAR_VEL = 0.70
+const SPEED_SETTINGS_STORAGE_KEY = 'ros2-web-motion-speeds-v6'
+const DEFAULT_LINEAR_VEL = 0.95
 const DEFAULT_ANGULAR_VEL = 2.6
 
 function clampSpeed(value, fallback, max) {

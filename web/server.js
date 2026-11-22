@@ -447,6 +447,31 @@ process.on('SIGTERM', () => {
     process.exit();
 });
 
+// 一键自动定位：在已保存的地图上做全局扫描匹配，并发布 /initialpose
+app.post('/api/auto_localize', (req, res) => {
+  const reqPath = typeof req.body?.map === 'string' ? req.body.map : '';
+  const mapName = (path.basename(reqPath || 'home').replace(/\.ya?ml$/i, '') || 'home');
+  const child = spawn('python3', ['-u', '/root/ros2_web/auto_localize.py', mapName], {
+    cwd: '/root/ros2_web',
+  });
+  let out = '';
+  let err = '';
+  const timer = setTimeout(() => {
+    try { child.kill('SIGKILL'); } catch (e) { /* ignore */ }
+  }, 100000);
+  child.stdout.on('data', (chunk) => { out += chunk.toString(); });
+  child.stderr.on('data', (chunk) => { err += chunk.toString(); });
+  child.on('close', (code) => {
+    clearTimeout(timer);
+    const line = out.trim().split('\n').filter(Boolean).pop();
+    try {
+      res.json(JSON.parse(line));
+    } catch (e) {
+      res.status(500).json({ ok: false, error: err.trim() || `自动定位失败 (exit ${code})` });
+    }
+  });
+});
+
 app.listen(port, () => {
     console.log(`ROS 2 运行服务后端已启动并监听在 http://localhost:${port}`);
 });

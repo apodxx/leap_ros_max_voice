@@ -1,6 +1,8 @@
 # Omnidirectional/mecanum base: vx + vy + wz.
 lite_navigation:
   ros__parameters:
+    # 实测：命令 < 0.40 m/s 时轮子不转（静摩擦），实际速度约为命令的 35~40%。
+    # 因此速度上限必须给到能"推动车"的量级，否则控制器会一直发无效命令。
     odom_topic: /odometry/filtered
     scan_topic: /scan
     map_frame: map
@@ -11,14 +13,14 @@ lite_navigation:
     localization_frequency: 4.0
     scan_timeout: 0.8
     tf_lookup_timeout: 0.05
-    max_vx: 0.18
-    max_vy: 0.16
-    max_reverse_speed: 0.08
-    max_wz: 0.70
-    max_xy_speed: 0.18
-    max_ax: 0.35
-    max_ay: 0.30
-    max_aw: 1.00
+    max_vx: 0.95
+    max_vy: 0.60
+    max_reverse_speed: 0.60
+    max_wz: 1.20
+    max_xy_speed: 0.95
+    max_ax: 1.20
+    max_ay: 1.00
+    max_aw: 2.00
     linear_gain: 1.0
     angular_gain: 0.9
     lookahead_distance: 0.36
@@ -28,7 +30,7 @@ lite_navigation:
     heading_deadband: 0.70
     path_search_window: 80
     goal_position_tolerance: 0.10
-    goal_yaw_tolerance: 0.12
+    goal_yaw_tolerance: 3.15
 
     inflation_radius: 0.24
     nearest_free_radius: 0.60
@@ -63,7 +65,7 @@ lite_navigation:
     local_reverse_weight: 0.80
     local_stalled_translation_penalty: 0.70
     local_recovery_lateral_weight: 1.40
-    local_recovery_speed: 0.08
+    local_recovery_speed: 0.35
     local_recovery_distance: 0.35
     local_recovery_minimum_improvement: 0.03
     local_recovery_direction_samples: 24

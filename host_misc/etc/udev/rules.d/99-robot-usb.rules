@@ -4,3 +4,5 @@ SUBSYSTEM=="tty", KERNELS=="1-1.2", SYMLINK+="lidar", MODE="0666"
 SUBSYSTEM=="tty", KERNELS=="1-1.3", SYMLINK+="lidar", MODE="0666"
 # Voice module CI1302 (CH340, 115200) on USB port 1-1.1.1
 SUBSYSTEM=="tty", KERNELS=="1-1.1.1", SYMLINK+="voice", MODE="0666"
+# 语音模块（创乐博 AI 语音串口模块）：插在 1-1.4.1 或 1-1.1.1
+SUBSYSTEM=="tty", KERNELS=="1-1.4.1", SYMLINK+="voice", MODE="0666"

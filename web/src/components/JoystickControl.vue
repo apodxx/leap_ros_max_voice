@@ -41,7 +41,7 @@ const emit = defineEmits(['velocity-change'])
 const canvasSize = 220
 const baseRadius = 90
 const knobRadius = 30
-const maxLinearSpeed = 0.70  // m/s
+const maxLinearSpeed = 0.95  // m/s
 const maxAngularSpeed = 2.6  // rad/s
 const sendRate = 100         // ms (10 Hz)
 

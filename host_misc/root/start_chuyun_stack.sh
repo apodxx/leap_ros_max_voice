@@ -41,6 +41,11 @@ else
 fi
 
 # 1.9) scan normalizer: karto/slam_toolbox requires a CONSTANT point count
+# 地图中继：导航模式下 /map 只发一次（latched），网页用 volatile 订阅收不到
+if ! pgrep -f '[m]ap_relay.py' >/dev/null 2>&1; then
+  setsid nohup python3 /root/ros2_web/map_relay.py > /root/map_relay.log 2>&1 &
+fi
+
 if ! pgrep -f '[s]can_normalizer.py' >/dev/null 2>&1; then
   echo "starting scan_normalizer"
   setsid nohup python3 /root/ros2_web/scan_normalizer.py \
@@ -102,14 +107,16 @@ if [ -e /dev/voice ]; then
   if ! pgrep -f '[v]oice_cmd_node.py' >/dev/null 2>&1; then
     echo "starting voice_cmd_node"
     cd /root/ai_voice_module || exit 1
+    # 必须走 /cmd_vel_raw：直发 /cmd_vel 会绕过符号翻转与最小速度补偿（0.42 保底）
     setsid nohup python3 voice_cmd_node.py --ros-args \
-      -p port:=/dev/voice -p linear_speed:=0.50 -p angular_speed:=1.50 -p hold:=0.5 \
+      -r /cmd_vel:=/cmd_vel_raw \
+      -p port:=/dev/voice -p linear_speed:=0.50 -p angular_speed:=0.80 -p hold:=1.5 \
       > /root/voice_cmd.log 2>&1 < /dev/null &
   else
     echo "voice_cmd_node already running"
   fi
 else
-  echo "voice module /dev/ttyUSB0 not present; skip voice control"
+  echo "voice module /dev/voice not present; skip voice control (see udev rule 1-1.4.1)"
 fi
 
 

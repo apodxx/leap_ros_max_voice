@@ -259,3 +259,132 @@ fi
 | 地图自洽性 | 旋转偏移扫描：把当前扫描绕机器人旋转 −180°~+180°，看最佳贴合角 | 最佳角应在 0° 附近且有尖峰 |
 
 > 注意：`/map` 是 `transient_local`，订阅时必须用对应 QoS，否则会以为"没有地图"。
+
+---
+
+# 续：语音控制、自动定位与动力调参（2026-11-22 下午）
+
+## 新增文件
+
+| 文件 | 位置 | 作用 |
+|---|---|---|
+| `auto_localize.py` | `web/` | 全局扫描匹配定位，7 秒出结果，发布 `/initialpose` |
+| `map_relay.py` | `web/` | 把 latched 的 `/map` 以 1 Hz 重播，供 volatile 订阅者（网页）使用 |
+| `fix_microros.sh` | `host_misc/root/` | 主控 micro-ROS 会话断开时一键重连（无需断电） |
+
+## `web/cmd_vel_shaper.py`
+
+```diff
+-MAX_VX = 0.45
+-MAX_WZ = 0.90
++MAX_VX = 1.30
++MAX_WZ = 1.40
++
++AXIS_SIGN = -1.0     # 主控 x/y/ω 与 ROS 相反
++
++# 实测：命令 < 0.40 m/s 时轮子完全不转（静摩擦 + PID 纯 P）
++MIN_LINEAR = 0.42    # 非零线速度命令幅值补到这个值（保留方向）
++MIN_ANGULAR = 0.55
+```
+
+新增"最小有效速度"逻辑：线速度幅值非零但低于 `MIN_LINEAR` 时按比例放大，
+避免控制器在接近目标时发出"推不动车"的小速度。
+
+## `web/server.js`
+
+新增 `POST /api/auto_localize`：spawn `auto_localize.py`，把 JSON 结果回传前端。
+
+## `web/src/App.vue`
+
+- 线速度默认 0.45 → **1.10 m/s**，角速度 2.0 → 2.6
+- 按键重映射：`A/D` = 左右转，`Q/E` = 左右移
+- 新增虚拟摇杆接入 `onJoystickVelocity`
+- 速度设置持久化 key：v3 → **v7**
+
+## `web/src/components/NavigationControl.vue`
+
+新增 **「一键自动定位」** 按钮：调用 `/api/auto_localize`，回显得分与坐标。
+
+## `web/src/components/JoystickControl.vue`
+
+`maxLinearSpeed` 0.6 → **1.10**，`maxAngularSpeed` 2.0 → 2.6。
+
+## `host_ws/src/chuyun_navigation2/launch/lite_navigation.launch.py`
+
+```diff
+ Node(
+     package='chuyun_navigation2',
+     executable='lite_navigation_node',
+     name='lite_navigation',
++    # 主控的 x/y/ω 与 ROS 相反，符号翻转在 cmd_vel_shaper 里统一处理，
++    # 导航必须走 /cmd_vel_raw 才能享受同样的限幅与符号转换。
++    remappings=[('/cmd_vel', '/cmd_vel_raw')],
+     ...
+```
+
+## `host_ws/src/chuyun_navigation2/config/lite_navigation_omni.yaml`
+
+| 参数 | 原值 | 现值 | 原因 |
+|---|---|---|---|
+| `max_vx` | 0.18 | **1.10** | 0.18 落在静摩擦死区里，永远推不动车 |
+| `max_vy` | 0.16 | 0.70 | 同上（横移） |
+| `max_reverse_speed` | 0.08 | 0.70 | 同上（倒车） |
+| `max_wz` | 0.70 | 1.30 | 转向 |
+| `max_xy_speed` | 0.18 | 1.10 | 合成速度上限 |
+| `max_ax` / `max_ay` / `max_aw` | 0.35 / 0.30 / 1.00 | 1.60 / 1.30 / 2.50 | 不放开加速度就到不了这个速度 |
+| `goal_yaw_tolerance` | 0.12 | **3.15** | 多点导航时不想每点都转身 |
+
+## `host_misc/etc/udev/rules.d/99-robot-usb.rules`
+
+```diff
+ # Voice module CI1302 (CH340, 115200) on USB port 1-1.1.1
+ SUBSYSTEM=="tty", KERNELS=="1-1.1.1", SYMLINK+="voice", MODE="0666"
++# 语音模块这次插在 1-1.4.1，两条规则都保留
++SUBSYSTEM=="tty", KERNELS=="1-1.4.1", SYMLINK+="voice", MODE="0666"
+```
+
+## `host_misc/root/start_chuyun_stack.sh`
+
+新增两段（都带幂等判断）：
+
+```bash
+# 地图中继：导航模式下 /map 只发一次（latched），网页用 volatile 订阅收不到
+if ! pgrep -f '[m]ap_relay.py' >/dev/null 2>&1; then
+  setsid nohup python3 /root/ros2_web/map_relay.py > /root/map_relay.log 2>&1 &
+fi
+```
+
+语音块补上 remap（**关键**）并调参：
+
+```diff
+-    setsid nohup python3 voice_cmd_node.py --ros-args \
+-      -p port:=/dev/voice -p linear_speed:=0.50 -p angular_speed:=1.50 -p hold:=0.5 \
++    setsid nohup python3 voice_cmd_node.py --ros-args \
++      -r /cmd_vel:=/cmd_vel_raw \
++      -p port:=/dev/voice -p linear_speed:=0.50 -p angular_speed:=0.80 -p hold:=1.5 \
+```
+
+## 固件参数（**通过 ROS 服务在线修改，未重新烧录**）
+
+```bash
+ros2 service call /set_speed_pid leap_interfaces/srv/SetSpeedPid \
+  '{kp: 12.0, ki: 1.0, kd: 0.0}'
+```
+
+原值 `kp=7.5, ki=0, kd=0`（纯 P，打滑后永远补不上稳态误差）。
+参数存在 NVS（键 `speed_v2`），断电/重启不丢。
+
+**效果**：起步门槛 0.40 → 0.20 m/s，命令→实际速度效率 35% → 65%。
+
+## 待做（需要烧录固件）
+
+`main/config/motion_config.h`：
+
+```c
+kMotorPwmDeadband = 200  →  450      // 低速时给更大推力
+kMaxAccelRpmPerS  = 500  →  800
+```
+
+编译：`D:\esp\v5.2.6` 的 ESP-IDF，`idf.py build`；
+烧录：`python -m esptool --chip esp32s3 -p COM16 -b 460800 write_flash -fm dio -ff 80m 0x10000 build\leap_ros_max.bin`
+

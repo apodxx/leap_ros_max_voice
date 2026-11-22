@@ -125,3 +125,71 @@ python -m esptool --chip esp32s3 -p COM4 -b 460800 write_flash -fm dio -ff 80m `
 4. 陀螺仪零偏依赖运行期估计，长时间连续行驶仍会缓慢漂移。
 
 详细的现象、证据与处理方式见 [`docs/调试踩坑记录.md`](docs/调试踩坑记录.md)。
+
+---
+
+## 7. 常见问题速查
+
+### "发了命令但车不动"
+
+按顺序查（详见 `docs/调试踩坑记录.md` 坑 20/21/22）：
+
+```bash
+# ① 板子↔上位机的 micro-ROS 会话还活着吗？
+ros2 topic hz /odom            # 没数据 = 会话断了
+sudo bash /root/fix_microros.sh   # 一键重连（不用断电）
+
+# ② 主控还在订阅 /cmd_vel 吗？
+ros2 topic info /cmd_vel       # Subscription count 应为 1
+
+# ③ 命令的符号和大小对吗？
+ros2 topic echo /cmd_vel --once     # 幅值应 >= 0.42 m/s（静摩擦死区）
+
+# ④ 命令到板子了吗？
+curl http://192.168.31.117/api/status | grep target
+```
+
+### "网页白屏 / 打不开"
+
+```bash
+curl -s http://127.0.0.1:5173/ | wc -c    # 0 字节 = 构建产物被清零（掉电导致）
+cd /root/ros2_web && npm run build
+```
+
+### "导航模式下地图不显示"
+
+`lite_navigation` 只在启动时发一次 `/map`（latched），网页是 volatile 订阅，收不到。
+`map_relay.py` 会以 1 Hz 重播（已加入开机自启）。
+
+### "车在地图上的位置不对"
+
+点网页上的 **「一键自动定位」**（全局扫描匹配，约 7 秒）。
+每次重新「开始导航」后都需要定位一次——里程计重启后从零开始。
+
+### "语音模块没反应"
+
+```bash
+ls -l /dev/voice                    # 不存在 → udev 端口变了（坑 18）
+python3 -c "import serial,binascii; s=serial.Serial('/dev/voice',115200,timeout=0.2); print(binascii.hexlify(s.read(64)))"
+# 说唤醒词时应出现 aa550300fb
+```
+
+---
+
+## 8. 动力调参记录
+
+固件 PID 存在 NVS 里，**可以不改固件在线调**：
+
+```bash
+ros2 service call /set_speed_pid leap_interfaces/srv/SetSpeedPid '{kp: 12.0, ki: 1.0, kd: 0.0}'
+```
+
+| 指标 | 调之前 (7.5/0/0) | 调之后 (12/1/0) |
+|---|---|---|
+| 起步门槛 | 0.40 m/s | **0.20 m/s** |
+| 命令 0.40 的实际速度 | 95 mm/s | **282 mm/s** |
+| 命令→实际效率 | 35% | **65%** |
+
+原因：原 PID 是纯 P，轮子打滑时编码器读数接近目标值，误差变小 → 输出变小 → 更转不动。
+`ki` 把这部分稳态误差累积起来，`kp` 提高让同样的误差产生更大推力。
+

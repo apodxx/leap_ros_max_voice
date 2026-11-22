@@ -63,6 +63,14 @@
         >
           {{ isSettingPose ? '正在设置... (按住拖动)' : '设置初始位置' }}
         </button>
+        <button
+          class="nav-btn btn-pose"
+          :disabled="autoLocating"
+          @click="runAutoLocalize"
+        >
+          {{ autoLocating ? '正在扫描匹配...' : '一键自动定位' }}
+        </button>
+        <div v-if="autoLocateMsg" class="nav-hint">{{ autoLocateMsg }}</div>
       </div>
 
       <!-- 多点导航 -->
@@ -186,6 +194,33 @@ function onDialogCancel(event) { if (isLoading.value) event.preventDefault() }
 
 
 const API_BASE = `http://${window.location.hostname}:3000/api`
+
+// 一键自动定位（全局扫描匹配 -> /initialpose）
+const autoLocating = ref(false)
+const autoLocateMsg = ref('')
+
+async function runAutoLocalize() {
+  if (autoLocating.value) return
+  autoLocating.value = true
+  autoLocateMsg.value = '正在扫描匹配，约需 5~15 秒...'
+  try {
+    const res = await fetch(`${API_BASE}/auto_localize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ map: selectedMap.value || '' }),
+    })
+    const data = await res.json()
+    if (data.ok) {
+      autoLocateMsg.value = `已定位：(${data.x.toFixed(2)}, ${data.y.toFixed(2)}) 朝向 ${data.yaw_deg.toFixed(0)}°，得分 ${(data.score * 100).toFixed(0)}%，用时 ${data.elapsed_s}s`
+    } else {
+      autoLocateMsg.value = data.error || '定位失败'
+    }
+  } catch (err) {
+    autoLocateMsg.value = `定位请求失败：${err.message}`
+  } finally {
+    autoLocating.value = false
+  }
+}
 let statusTimer = null
 
 async function loadMaps() {
