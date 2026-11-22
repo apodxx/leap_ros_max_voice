@@ -1,4 +1,4 @@
-# leap_ros_max — 四轮麦轮移动机器人（ESP32-S3 + RK3566 + ROS 2 Jazzy + Web）
+﻿# leap_ros_max — 四轮麦轮移动机器人（ESP32-S3 + RK3566 + ROS 2 Jazzy + Web）
 
 一套完整的四轮麦克纳姆轮移动机器人实现，包含四个部分：
 
@@ -12,6 +12,8 @@
 硬件明细（型号、接口、端口映射、电源、TF、话题表）见
 **[`docs/硬件清单.md`](docs/硬件清单.md)**。
 
+**整车硬件成本约 ¥734**（不含电池），大量使用二手件。明细与采购链接见硬件清单。
+
 调试过程中踩过的 26 个坑（症状 / 证据 / 根因 / 修复）见
 **[`docs/调试踩坑记录.md`](docs/调试踩坑记录.md)**，逐文件改动见
 **[`docs/CHANGELOG.md`](docs/CHANGELOG.md)**。
@@ -21,7 +23,7 @@
 ## 硬件概览
 
 ```
-                    上位机 Panther X2 (RK3566, Armbian/Ubuntu 24.04, ROS 2 Jazzy)
+                    上位机 Panther（黑豹）X2 (RK3566, Armbian/Ubuntu 24.04, ROS 2 Jazzy)
                     192.168.31.104   :5173 网页 :3000 API :8765 foxglove :8888 micro-ROS
                                     │
         ┌───────────────┬───────────┴──────────┬────────────────┐
@@ -29,21 +31,21 @@
    STL-27L           CI1302               JMTek             │
    921600bps         115200bps            TTS 播报           │
                                                             ▼
-                                   主控 ESP32-S3 (192.168.31.117)
+                                   主控 leap_ros_pro 控制板 (ESP32-S3) 192.168.31.117
                                    4× AT8236 + 4× MG370 1:32 (GMR 500ppr)
                                    LSM6DS3 IMU / 电池 ADC / 超声波 / 灯效
 ```
 
 | 部件 | 型号 |
 |---|---|
-| 主控 | ESP32-S3，4 MiB Flash，micro-ROS over UDP |
-| 上位机 | Panther X2（RK3566，4 核，3.8 GiB），Armbian 26.08 / Ubuntu 24.04，ROS 2 Jazzy |
-| 电机 | MG370 1:32 ×4，GMR 编码器 500 ppr（64000 计数/轮转） |
+| 主控 | **leap_ros_pro 控制板**（ESP32-S3，4 MiB Flash，micro-ROS over UDP），¥198 |
+| 上位机 | **Panther（黑豹）X2**（RK3566，4 核，3.8 GiB），Armbian 26.08 / Ubuntu 24.04，ROS 2 Jazzy，¥150 |
+| 电机 + 底盘 | **趣轮 MG370 1:32** ×4 + GMR 编码器 500 ppr（64000 计数/轮转），¥180 |
 | 驱动 | AT8236 ×4 |
 | 底盘 | 四轮麦轮，轮径 80 mm，轮距 340 mm，轴距 295 mm |
-| 雷达 | LDROBOT STL-27L，10 Hz，约 2170 点/圈 |
-| 语音 | CI1302，唤醒词「小创小创」，5 字节帧协议 |
-| 电源 | 3S 锂电，标称 11.1 V |
+| 雷达 | **LDROBOT STL-27L**，10 Hz，约 2170 点/圈，¥86（二手） |
+| 语音 | **创乐博 AI 大模型语音交互模块**（CI1302），唤醒词「小创小创」，¥120 |
+| 电源 | **辰克 5600 mAh 3S 锂电池**，标称 11.1 V |
 
 ---
 
