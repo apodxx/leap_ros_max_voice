@@ -472,6 +472,23 @@ app.post('/api/auto_localize', (req, res) => {
   });
 });
 
+// 语音播报（多点导航到达提示等）
+app.post('/api/speak', (req, res) => {
+  const text = typeof req.body?.text === 'string' ? req.body.text.trim() : '';
+  if (!text) return res.status(400).json({ success: false, error: 'text 不能为空' });
+  const voice = typeof req.body?.voice === 'string' ? req.body.voice : '';
+  const argv = ['-u', '/root/ros2_web/speak.py'];
+  if (voice) argv.push('--voice', voice);
+  argv.push(text.slice(0, 200));
+  try {
+    const child = spawn('python3', argv, { cwd: '/root/ros2_web', detached: true, stdio: 'ignore' });
+    child.unref();
+    res.json({ success: true, text });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.listen(port, () => {
     console.log(`ROS 2 运行服务后端已启动并监听在 http://localhost:${port}`);
 });

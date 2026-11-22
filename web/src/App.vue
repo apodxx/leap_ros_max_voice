@@ -635,9 +635,21 @@ function dispatchNextWaypoint() {
   sendGoalPose(next.x, next.y)
 }
 
+// 到达点位播报：“到达1号点”
+let waypointSeq = 0
+function announceArrival(seq) {
+  if (!seq) return
+  fetch(`${API_BASE}/speak`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: `到达${seq}号点` })
+  }).catch(() => {})
+}
+
 function advanceWaypoint() {
   if (!multiPointMode.value || !activeWaypoint.value) return
   if (waypointAdvancing.value) return
+  announceArrival(activeWaypoint.value.seq)
   waypointAdvancing.value = true
   setTimeout(() => {
     dispatchNextWaypoint()
@@ -647,7 +659,8 @@ function advanceWaypoint() {
 
 function onWaypointAdd({ x, y }) {
   if (!multiPointMode.value) return
-  waypointQueue.value.push({ x, y })
+  waypointSeq += 1
+  waypointQueue.value.push({ x, y, seq: waypointSeq })
   if (!activeWaypoint.value) {
     dispatchNextWaypoint()
   }
@@ -657,6 +670,7 @@ function clearWaypoints() {
   waypointQueue.value = []
   activeWaypoint.value = null
   waypointAdvancing.value = false
+  waypointSeq = 0
 }
 
 function onWaypointReached() {
